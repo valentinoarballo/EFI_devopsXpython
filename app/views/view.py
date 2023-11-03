@@ -32,6 +32,8 @@ from app.models.models import (
 from app.schemas.schema import (
     userSchema,
     publicacionSchema,
+    temaSchema,
+    comentarioSchema
 )
 from random import *
 from datetime import datetime, timedelta
@@ -123,7 +125,9 @@ class UsuarioAPI(MethodView):
         db.session.commit()
         return jsonify(ELIMINADO={userSchema().dump(user)}) 
 app.add_url_rule('/user', view_func=UsuarioAPI.as_view('usuario'))
-app.add_url_rule('/user/<user_id>', view_func=UsuarioAPI.as_view('usuario_por_id'))
+app.add_url_rule('/user/<user_id>', view_func=UsuarioAPI.as_view('usuario_id'))
+
+
 
 
 class PublicacionAPI(MethodView):
@@ -149,12 +153,17 @@ class PublicacionAPI(MethodView):
         tema_id = publicacion_json.get('tema_id')
         usuario_id = publicacion_json.get('usuario_id')
 
-        # le asigna una foto random al perfil
+
+        # En el blog entregado en la primera etapa del año
+        # le asignaba una foto random al perfil de los usuarios
+        # asi que le dejo espa parte por mas que no se use
         numero_random = randint(1,40)
         perfil = f'gato{numero_random}.png'
 
+        # Fecha del momento en el que se crea el post
         fecha_hora = datetime.now().strftime("%H:%m")
 
+        # Creo la nueva publicacions 
         nuevo_comentario = Publicacion (
             autor=autor,
             descripcion=descripcion,
@@ -166,6 +175,7 @@ class PublicacionAPI(MethodView):
             usuario_id=usuario_id,
         ) 
 
+        # Subo el nuevo usuario a la base de datos
         db.session.add(nuevo_comentario)
         db.session.commit()
 
@@ -210,7 +220,63 @@ class PublicacionAPI(MethodView):
         db.session.commit()
         return jsonify(ELIMINADO={userSchema().dump(user)}) 
 app.add_url_rule('/publicaciones', view_func=PublicacionAPI.as_view('publicaciones'))
-app.add_url_rule('/publicacion/<user_id>', view_func=PublicacionAPI.as_view('publicacion_por_id'))
+app.add_url_rule('/publicacion/<publicacion_id>', view_func=PublicacionAPI.as_view('publicacion_id'))
+
+
+
+class TemaAPI(MethodView):
+    def get(self, tema_id=None):
+        if tema_id is None:
+            temas = Tema.query.all()
+            resultado = temaSchema().dump(temas, many=True)
+        else:
+            tema = Tema.query.get(tema_id)
+            resultado = temaSchema().dump(tema)
+        return jsonify(resultado)
+    
+    def post(self):
+        tema_json = temaSchema().load(request.json) 
+        tema = tema_json.get('tema')
+
+        nuevo_tema = Tema(
+            nombre=tema,
+        )
+
+        db.session.add(nuevo_tema)
+        db.session.commit()
+
+        return jsonify(AGREGADO=temaSchema().dump(tema_json))
+        
+    def delete(self, tema_id):
+        tema = Tema.query.get(tema_id)
+        db.session.delete(tema)
+        db.session.commit()
+        return jsonify(ELIMINADO={temaSchema().dump(tema)})
+app.add_url_rule('/temas', view_func=TemaAPI.as_view('temas'))
+app.add_url_rule('/temas/<tema_id>', view_func=TemaAPI.as_view('tema_id'))
+
+
+
+class ComentarioAPI(MethodView):
+    def get(self, comentario_id=None):
+        if comentario_id is None:
+            comentarios = Comentario.query.all()
+            resultado = comentarioSchema().dump(comentarios, many=True)
+        else:
+            comentario = Comentario.query.get(comentario_id)
+            resultado = comentarioSchema().dump(comentario)
+        return jsonify(resultado)
+
+    def post(self):
+        comentario_json
+
+    def delete(self, comentario_id):
+        pass
+
+app.add_url_rule('/comentarios', view_func=TemaAPI.as_view('temas'))
+app.add_url_rule('/comentarios/<comentario_id>', view_func=TemaAPI.as_view('comentario_id'))
+
+
 
 @app.route('/')
 def index():
