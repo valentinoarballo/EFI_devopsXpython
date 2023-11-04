@@ -18,6 +18,11 @@ from flask_jwt_extended import (
     jwt_required,
 )
 from sqlalchemy import ForeignKey
+from sqlalchemy.exc import (
+    IntegrityError,
+    NoResultFound,
+    )
+from marshmallow.exceptions import ValidationError
 from werkzeug.security import (
     generate_password_hash,
     check_password_hash
@@ -46,83 +51,98 @@ from flask.views import MethodView
 class UsuarioAPI(MethodView):
     # Trae usuarios    
     def get(self, user_id=None):
+        
+        # si no se proporciona ninguna id se trae todo
         if user_id is None:
             usuarios = Usuario.query.all()
             resultado = userSchema().dump(usuarios, many=True)
-        else:
-            user = Usuario.query.get(user_id)
-            resultado = userSchema().dump(user)
-        return jsonify(resultado)
+            return jsonify(resultado), 200
+        
+        # si se proporciona una id, la busca
+        user = Usuario.query.get(user_id)
+        
+        # si no existe devuelve este error
+        if user is None:
+            return jsonify(USER_NOT_FOUND=f"user with id {user_id} not found"), 404
+        
+        # a este punto se llega solo si se proporciono un id que exista
+        resultado = userSchema().dump(user)
+        return jsonify(resultado), 200
     
     # Crea usuarios
     def post(self):
-        # try:
-        user_json = userSchema().load(request.json) 
-        nombre = user_json.get('nombre')
-        email = user_json.get('email')
-        password = user_json.get('password')
+        # se podria separar en 2 try's, pero creo que se entiende
+        try:
+            # recuper los datos de la request
+            user_json = userSchema().load(request.json) 
+            nombre = user_json.get('nombre')
+            email = user_json.get('email')
+            password = user_json.get('password')
 
-        nuevo_usuario = Usuario(
-            nombre=nombre,
-            email=email,
-            password=password
-        ) 
+            # los intenta cargar a la base de datos
+            nuevo_usuario = Usuario(
+                nombre=nombre,
+                email=email,
+                password=password
+            )
 
-        db.session.add(nuevo_usuario)
-        db.session.commit()
-        # except:
-        #     return jsonify(ERROR = "Ya existe una cuenta con este email.")
-
-        return jsonify(AGREGADO=userSchema().dump(user_json)) 
+            db.session.add(nuevo_usuario)
+            db.session.commit()
+            # si todo salio bien los carga y devuelve lo que se cargo
+            return jsonify(AGREGADO=userSchema().dump(user_json)) 
+        
+        # Puede haber 2 tipos de error, con la serializacion o con la base de datos
+        except (ValidationError, IntegrityError) as err:
+            # por si es con la serializacion
+            if isinstance (err, ValidationError): 
+                return jsonify(ERROR=err.messages), 400
+            # por si es con la base de datos
+            elif isinstance (err, IntegrityError):
+                # hace un rollback, por las dudas
+                db.session.rollback()
+                return jsonify(ERROR=str(err)), 409
     
     # Actualiza nombres de usuario
     def put(self, user_id):
-        user = Usuario.query.get(user_id)
-        user_json = userSchema().load(request.json) 
-        nombre = user_json.get('nombre')
+        # este try si lo separe en 2
+        try:
+            # busca un usuario con el id proporcionado
+            user = Usuario.query.filter_by(id=user_id).one()
+        except:
+            # si no lo encuentra devuelve que no lo encontro
+            return jsonify(ERROR=f"user with id {user_id} not found")  
+
+        # si existe el usuario, verifica que la request sea valida tambien
+        try:
+            user_json = userSchema().load(request.json) 
+            nombre = user_json.get('nombre')
+        except ValidationError as err:
+            return jsonify(ERROR=err.messages)  
+        
+        # si pasa todas las validaciones, cambia el nombre
         user.nombre = nombre
         db.session.commit()
+
+        # y muestra al usuario ya modificado
         return jsonify(MODIFICADO=userSchema().dump(user))  
     
     # Borra usuarios
     def delete(self, user_id):
-        user = Usuario.query.get(user_id)
-
-        if user:
-            # aun no funciona YA FUNCIAAONAAA
-            publicaciones_relacionadas = (Publicacion.query.
-                                        filter_by(usuario_id=user_id)
-                                        .all()
-                                    )
-            comentarios_relacionados = (Comentario.query.
-                                        filter_by(usuario_id=user_id)
-                                        .all()
-                                    )
-            
-            for comentario in comentarios_relacionados:
-                db.session.delete(comentario)
-
-            for publicacion in publicaciones_relacionadas:
-                tema = publicacion.tema
-                comentarios_asociados = (Comentario.query
-                            .filter_by(publicacion_id=publicacion.id)
-                            .all()
-                        )
-                for comentario_asociado in comentarios_asociados:
-                    db.session.delete(comentario_asociado)
-                
-                db.session.delete(publicacion)
-                
-                if (
-                    db.session.query(Publicacion)
-                    .filter_by(tema_id=tema.id)
-                    .count() == 0
-                ):
-                    db.session.delete(tema)
-
+        # verifica que exista el usuario
+        try:
+            user = Usuario.query.filter_by(id=user_id).one()
+        except:
+            return jsonify(ERROR=f"user with id {user_id} not found")
+        
+       # borra todos los comentarios hechos por el usuario que se esta borrando
+        Comentario.query.filter_by(usuario_id=user_id).delete()
+        Publicacion.query.filter_by(usuario_id=user_id).delete()
+        
+        # borra el usuario
         db.session.delete(user)
         db.session.commit()
-        return jsonify(USUARIO_ELIMINADO=userSchema().dump(user)) 
+        return jsonify(USUARIO_ELIMINADO=userSchema().dump(user))
+
 app.add_url_rule('/user', view_func=UsuarioAPI.as_view('usuario'))
 app.add_url_rule('/user/<user_id>', view_func=UsuarioAPI.as_view('usuario_id'))
 
@@ -134,9 +154,11 @@ class PublicacionAPI(MethodView):
         if publicacion_id is None:
             usuarios = Publicacion.query.all()
             resultado = publicacionSchema().dump(usuarios, many=True)
-        else:
-            user = Publicacion.query.get(publicacion_id)
-            resultado = publicacionSchema().dump(user)
+        
+        user = Publicacion.query.get(publicacion_id)
+        if user is None:
+            pass
+        resultado = publicacionSchema().dump(user)
         return jsonify(resultado)
     
     # Crea publicaciones
