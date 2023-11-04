@@ -1,8 +1,8 @@
-"""initial
+"""initial_migration
 
-Revision ID: 9b4ee8eba49b
+Revision ID: 6065c0946cc8
 Revises: 
-Create Date: 2023-10-26 17:21:58.342446
+Create Date: 2023-11-04 04:55:38.319984
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '9b4ee8eba49b'
+revision = '6065c0946cc8'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -36,9 +36,7 @@ def upgrade():
     )
     op.create_table('publicacion',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('autor', sa.String(length=100), nullable=False),
     sa.Column('descripcion', sa.String(length=100), nullable=False),
-    sa.Column('perfil', sa.String(length=100), nullable=False),
     sa.Column('fecha_hora', sa.DateTime(), nullable=False),
     sa.Column('tema_id', sa.Integer(), nullable=True),
     sa.Column('usuario_id', sa.Integer(), nullable=True),
@@ -48,13 +46,11 @@ def upgrade():
     )
     op.create_table('comentario',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('autor', sa.String(length=100), nullable=False),
-    sa.Column('perfil', sa.String(length=100), nullable=False),
     sa.Column('descripcion', sa.String(length=100), nullable=False),
-    sa.Column('id_publicacion', sa.Integer(), nullable=False),
+    sa.Column('publicacion_id', sa.Integer(), nullable=False),
     sa.Column('fecha_hora', sa.DateTime(), nullable=False),
     sa.Column('usuario_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['id_publicacion'], ['publicacion.id'], ),
+    sa.ForeignKeyConstraint(['publicacion_id'], ['publicacion.id'], ),
     sa.ForeignKeyConstraint(['usuario_id'], ['usuario.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

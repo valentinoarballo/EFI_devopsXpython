@@ -11,17 +11,7 @@ class Publicacion(db.Model):
         primary_key=True
     )
 
-    autor = db.Column(
-        db.String(100),
-        nullable=False
-    )
-
     descripcion = db.Column(
-        db.String(100),
-        nullable=False
-    )
-
-    perfil = db.Column(
         db.String(100),
         nullable=False
     )
@@ -39,7 +29,7 @@ class Publicacion(db.Model):
 
     tema = db.relationship(
         'Tema',
-        backref=db.backref('publicaciones', lazy=True)
+        backref=db.backref('tema')
     )
 
     usuario_id = db.Column(
@@ -49,7 +39,7 @@ class Publicacion(db.Model):
 
     usuario = db.relationship(
         'Usuario',
-        backref=db.backref('publicaciones', lazy=True)
+        backref=db.backref('publicacion')
     )
 
     def __str__(self):
@@ -79,25 +69,20 @@ class Comentario(db.Model):
         primary_key=True
     )
 
-    autor = db.Column(
-        db.String(100),
-        nullable=False
-    )
-
-    perfil = db.Column(
-        db.String(100),
-        nullable=False
-    )
-
     descripcion = db.Column(
         db.String(100),
         nullable=False
     )
 
-    id_publicacion = db.Column(
+    publicacion_id = db.Column(
         db.Integer,
         db.ForeignKey('publicacion.id'),
         nullable=False
+    )
+
+    publicacion = db.relationship(
+        'Publicacion',
+        backref=db.backref('publicacion')
     )
 
     fecha_hora = db.Column(
@@ -110,13 +95,12 @@ class Comentario(db.Model):
         db.Integer,
         db.ForeignKey('usuario.id'),
         nullable=False
-    )
+    )    
 
     usuario = db.relationship(
         'Usuario',
-        backref=db.backref('comentarios', lazy=True)
+        backref=db.backref('comentario')
     )
-    
 
     def __str__(self):
         return self.name
