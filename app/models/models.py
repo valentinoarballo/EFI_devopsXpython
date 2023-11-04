@@ -129,11 +129,6 @@ class Usuario(db.Model):
         nullable=False
     )
 
-    perfil = db.Column(
-        db.String(150),
-        nullable=False
-    )
-
     fecha_creacion = db.Column(
         db.DateTime,
         default=datetime.now,

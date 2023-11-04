@@ -6,7 +6,6 @@ class userSchema(ma.Schema):
     nombre = fields.String()
     email = fields.String()
     password = fields.String()
-    perfil = fields.String()
     fecha_creacion = fields.DateTime()
     
 class temaSchema(ma.Schema):
@@ -24,10 +23,6 @@ class publicacionSchema(publicacionBasicSchema):
     fecha_hora = fields.DateTime()
     tema =  fields.Nested(temaSchema)
     usuario =  fields.Nested(userSchema)
-
-
-
-
 
 class comentarioBasicSchema(ma.Schema):
     descripcion = fields.String()

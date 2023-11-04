@@ -41,6 +41,8 @@ from random import *
 from datetime import datetime, timedelta
 from flask.views import MethodView
 
+# ----------- Endpoint Usuarios -----------
+
 class UsuarioAPI(MethodView):
     # Trae usuarios    
     def get(self, user_id=None):
@@ -60,15 +62,10 @@ class UsuarioAPI(MethodView):
         email = user_json.get('email')
         password = user_json.get('password')
 
-        # le asigna una foto random al perfil
-        numero_random = randint(1,40)
-        perfil = f'gato{numero_random}.png'
-
         nuevo_usuario = Usuario(
             nombre=nombre,
             email=email,
-            password=password,
-            perfil=perfil
+            password=password
         ) 
 
         db.session.add(nuevo_usuario)
@@ -92,6 +89,7 @@ class UsuarioAPI(MethodView):
         user = Usuario.query.get(user_id)
 
         if user:
+            # aun no funciona YA FUNCIAAONAAA
             publicaciones_relacionadas = (Publicacion.query.
                                         filter_by(usuario_id=user_id)
                                         .all()
@@ -107,7 +105,7 @@ class UsuarioAPI(MethodView):
             for publicacion in publicaciones_relacionadas:
                 tema = publicacion.tema
                 comentarios_asociados = (Comentario.query
-                            .filter_by(id_publicacion=publicacion.id)
+                            .filter_by(publicacion_id=publicacion.id)
                             .all()
                         )
                 for comentario_asociado in comentarios_asociados:
@@ -124,12 +122,11 @@ class UsuarioAPI(MethodView):
 
         db.session.delete(user)
         db.session.commit()
-        return jsonify(USUARIO_ELIMINADO={userSchema().dump(user)}) 
+        return jsonify(USUARIO_ELIMINADO=userSchema().dump(user)) 
 app.add_url_rule('/user', view_func=UsuarioAPI.as_view('usuario'))
 app.add_url_rule('/user/<user_id>', view_func=UsuarioAPI.as_view('usuario_id'))
 
-
-
+# ----------- Endpoint Publicaciones -----------
 
 class PublicacionAPI(MethodView):
     # Trae publicaciones    
@@ -173,7 +170,7 @@ class PublicacionAPI(MethodView):
         if publicacion:
             
             comentarios_relacionados = (Comentario.query.
-                                        filter_by(publicacion_id=Comentario.id)
+                                        filter_by(publicacion_id=publicacion_id)
                                         .all()
                                     )
             
@@ -182,12 +179,11 @@ class PublicacionAPI(MethodView):
             
         db.session.delete(publicacion)
         db.session.commit()
-        return jsonify(PUBLICACION_ELIMINADO={userSchema().dump(publicacion)})
-     
+        return jsonify(PUBLICACION_ELIMINADA=comentarioBasicSchema().dump(publicacion))
 app.add_url_rule('/publicaciones', view_func=PublicacionAPI.as_view('publicaciones'))
-app.add_url_rule('/publicacion/<publicacion_id>', view_func=PublicacionAPI.as_view('publicacion_id'))
+app.add_url_rule('/publicaciones/<publicacion_id>', view_func=PublicacionAPI.as_view('publicacion_id'))
 
-
+# ----------- Endpoint Temas -----------
 
 class TemaAPI(MethodView):
     def get(self, tema_id=None):
@@ -217,9 +213,10 @@ class TemaAPI(MethodView):
         db.session.delete(tema)
         db.session.commit()
         return jsonify(TEMA_ELIMINADO=temaSchema().dump(tema))
-    
 app.add_url_rule('/temas', view_func=TemaAPI.as_view('temas'))
 app.add_url_rule('/temas/<tema_id>', view_func=TemaAPI.as_view('tema_id'))
+
+# ----------- Endpoint Comentarios -----------
 
 class ComentarioAPI(MethodView):
     def get(self, comentario_id=None):
@@ -245,18 +242,17 @@ class ComentarioAPI(MethodView):
 
         db.session.add(nuevo_comentario)
         db.session.commit()
-        return jsonify(AGREGADO=comentarioBasicSchema().dump(comentario_json))
+        return jsonify(AGREGADO=comentarioSchema().dump(comentario_json))
     
     def delete(self, comentario_id):
         comentario = Comentario.query.get(comentario_id)
         db.session.delete(comentario)
         db.session.commit()
-        return jsonify(ELIMINADO=comentarioSchema().dump(comentario))
-
+        return jsonify(ELIMINADO=comentarioBasicSchema().dump(comentario))
 app.add_url_rule('/comentarios', view_func=ComentarioAPI.as_view('comentarios'))
 app.add_url_rule('/comentarios/<comentario_id>', view_func=ComentarioAPI.as_view('comentario_id'))
 
-
+# ----------- Endpoint Raiz (? -----------
 
 @app.route('/')
 def index():
