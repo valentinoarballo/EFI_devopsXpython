@@ -34,7 +34,8 @@ class Publicacion(db.Model):
 
     usuario_id = db.Column(
         db.Integer,
-        db.ForeignKey('usuario.id')
+        db.ForeignKey('usuario.id'),
+        nullable=False
     )
 
     usuario = db.relationship(

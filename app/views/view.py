@@ -151,72 +151,94 @@ app.add_url_rule('/user/<user_id>', view_func=UsuarioAPI.as_view('usuario_id'))
 class PublicacionAPI(MethodView):
     # Trae publicaciones    
     def get(self, publicacion_id=None):
+        # trae todo si no se proporciona id
         if publicacion_id is None:
             usuarios = Publicacion.query.all()
             resultado = publicacionSchema().dump(usuarios, many=True)
+            return jsonify(resultado), 200
+
         
+        # intenta buscar el id proporcionado 
         user = Publicacion.query.get(publicacion_id)
+
+        # si el id que ingreso el usuario no existe entra al if
         if user is None:
-            pass
+            resultado = f"publication with id {publicacion_id} not found"
+            return jsonify(PUBLICATION_NOT_FOUND=resultado), 404
+
         resultado = publicacionSchema().dump(user)
-        return jsonify(resultado)
+        return jsonify(resultado), 200
     
     # Crea publicaciones
     def post(self):
-        # try:
-        publicacion_json = publicacionBasicSchema().load(request.json) 
-        descripcion = publicacion_json.get('descripcion')
-        tema_id = publicacion_json.get('tema_id')
-        usuario_id = publicacion_json.get('usuario_id')
+        # valida la serializacion
+        try:
+            publicacion_json = publicacionBasicSchema().load(request.json) 
+            descripcion = publicacion_json.get('descripcion')
+            tema_id = publicacion_json.get('tema_id')
+            usuario_id = publicacion_json.get('usuario_id')
+        
+        except ValidationError as err:
+            return jsonify(ERROR=err.messages), 400
+        
+        # valida la carga de datos
+        try:
+            nuevo_comentario = Publicacion (
+                descripcion=descripcion,
+                tema_id=tema_id,
+                usuario_id=usuario_id,
+            )
+            db.session.add(nuevo_comentario)
+            db.session.commit()
 
-        # Fecha del momento en el que se crea el post
-        fecha_hora = datetime.now().strftime("%H:%m")
+        except IntegrityError as err:
+            db.session.rollback()
+            return jsonify(ERROR=str(err)), 409
 
-        # Creo la nueva publicacions 
-        nuevo_comentario = Publicacion (
-            descripcion=descripcion,
-            tema_id=tema_id,
-            usuario_id=usuario_id,
-        ) 
-
-        # Subo el nuevo usuario a la base de datos
-        db.session.add(nuevo_comentario)
-        db.session.commit()
-
-        return jsonify(AGREGADO=publicacionBasicSchema().dump(publicacion_json)) 
+        # si todo esta OK ya se creo la publicacion y se muestra el dump
+        return jsonify(AGREGADO=publicacionBasicSchema().dump(publicacion_json)), 201
     
     # Borra publicaciones
     def delete(self, publicacion_id):
-        publicacion = Publicacion.query.get(publicacion_id)
-
-        if publicacion:
+        try:
+            publicacion = Publicacion.query.filter_by(id=publicacion_id).one()
+        except:
+            return jsonify(ERROR=f"publication with id {publicacion_id} not found"), 404
+        
+        # si se borra la publicacion tambien se borrar sus comentarios
+        Comentario.query.filter_by(publicacion_id=publicacion_id).delete()
             
-            comentarios_relacionados = (Comentario.query.
-                                        filter_by(publicacion_id=publicacion_id)
-                                        .all()
-                                    )
-            
-            for comentario in comentarios_relacionados:
-                db.session.delete(comentario)
-            
+        # se borra la publicacion
         db.session.delete(publicacion)
         db.session.commit()
         return jsonify(PUBLICACION_ELIMINADA=comentarioBasicSchema().dump(publicacion))
+
 app.add_url_rule('/publicaciones', view_func=PublicacionAPI.as_view('publicaciones'))
 app.add_url_rule('/publicaciones/<publicacion_id>', view_func=PublicacionAPI.as_view('publicacion_id'))
 
 # ----------- Endpoint Temas -----------
 
 class TemaAPI(MethodView):
+    # Trae Temas
     def get(self, tema_id=None):
+        # si no se proporciona tema_id
         if tema_id is None:
             temas = Tema.query.all()
             resultado = temaSchema().dump(temas, many=True)
-        else:
-            tema = Tema.query.get(tema_id)
-            resultado = temaSchema().dump(tema)
+            return jsonify(resultado)
+
+        # busca tema_id en la tabla Tema
+        tema = Tema.query.get(tema_id)
+
+        # si no lo encuentra devuelve este error
+        if tema is None:
+            return jsonify(ERROR=f"theme with id {tema_id} not found"), 404
+
+        # si se proporciono tema_id y se encontro el tema
+        resultado = temaSchema().dump(tema)
         return jsonify(resultado)
     
+    # Crea Temas
     def post(self):
         tema_json = temaSchema().load(request.json) 
         tema = tema_json.get('nombre')
@@ -230,11 +252,13 @@ class TemaAPI(MethodView):
 
         return jsonify(AGREGADO=temaSchema().dump(tema_json))
         
+    # Borra Temas
     def delete(self, tema_id):
         tema = Tema.query.get(tema_id)
         db.session.delete(tema)
         db.session.commit()
         return jsonify(TEMA_ELIMINADO=temaSchema().dump(tema))
+
 app.add_url_rule('/temas', view_func=TemaAPI.as_view('temas'))
 app.add_url_rule('/temas/<tema_id>', view_func=TemaAPI.as_view('tema_id'))
 
@@ -271,6 +295,7 @@ class ComentarioAPI(MethodView):
         db.session.delete(comentario)
         db.session.commit()
         return jsonify(ELIMINADO=comentarioBasicSchema().dump(comentario))
+
 app.add_url_rule('/comentarios', view_func=ComentarioAPI.as_view('comentarios'))
 app.add_url_rule('/comentarios/<comentario_id>', view_func=ComentarioAPI.as_view('comentario_id'))
 
