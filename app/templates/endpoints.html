@@ -1,0 +1,68 @@
+{% extends 'layout.html' %}
+{% block title %}
+Endpoints
+{% endblock %}
+
+{% block body %}
+<h1 class="px-5 pt-2">
+    Instrucciones
+</h1>
+<h3 class="px-5">
+    Para ejecutar este proyecto, sigue estos pasos
+</h3>
+<p class="px-5">
+    Podes usar el navegador, pero es mejor un cliente HTTP como Postman o Thunder Client para probar los
+    endpoints de la API.<br>
+    Por ejemplo, puedes hacer una petición GET a <code>http://0.0.0.0:5055/usuarios</code> para obtener la lista de
+    usuarios,
+    o una petición POST a <code>http://0.0.0.0:5055/temas</code> para crear un nuevo tema.<br>
+</p>
+<p class="px-5">
+    Para detener y eliminar los contenedores, ejecuta el comando docker-compose down.
+</p>
+
+<br><hr><br>
+
+<h1 class="px-5">
+    Endpoints disponibles
+</h1>
+
+<h3 class="px-5">
+    La API tiene los siguientes endpoints
+</h3>
+
+<div class="px-5 py-2">
+    <p>
+        <code>/usuarios</code> --- Permite crear y obtener usuarios.
+    </p>
+    <p>
+        <code>/usuarios/user_id</code> --- Permite obtener, actualizar y eliminar un usuario por su id.
+    </p>
+    <p>
+        <code>/publicaciones</code> --- Permite crear y obtener publicaciones.
+    </p>
+    <p>
+        <code>/publicaciones/publicacion_id</code> --- Permite obtener y eliminar una publicación por su id.
+    </p>
+    <p>
+        <code>/temas</code> --- Permite crear y obtener temas.
+    </p>
+    <p>
+        <code>/temas/tema_id</code> --- Permite obtener y eliminar un tema por su id.
+    </p>
+    <p>
+        <code>/comentarios</code> --- Permite crear y obtener comentarios.
+    </p>
+    <p>
+        <code>/comentarios/comentario_id</code> --- Permite obtener y eliminar un comentario por su id.
+    </p>
+</div>
+
+<p class="px-5">
+    Los métodos HTTP que se pueden usar en cada endpoint son los siguientes:<br>
+    <strong class="text-success">GET</strong>: Para obtener uno o más recursos.<br>
+    <strong class="text-primary">POST</strong>: Para crear un nuevo recurso.<br>
+    <strong class="text-warning">PUT</strong>: Para actualizar un recurso existente.<br>
+    <strong class="text-danger">DELETE</strong> Para eliminar un recurso existente.<br>
+</p>
+{% endblock %}

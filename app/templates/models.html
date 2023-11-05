@@ -1,0 +1,26 @@
+{% extends 'layout.html' %}
+{% block title %}
+    Modelos
+{% endblock %}
+
+{% block body %}
+<h1 class="px-5 pt-3">
+    Los modelos en la base de datos
+</h1>
+<h4 class="px-5">
+    Ver la estructura de los modelos puede ayudar a entender mejor el funcionamiento del proyecto
+</h4>
+
+<p class="px-5">
+    Cada uno de los endpoints va a modificar la base de datos siempre y cuando se utilicen los metodos de peticion POST, PUT o DELETE, todas las tablas estan relacionadas con al menos alguna otra tabla, esto permite borrar elementos en cascada, por ejemplo si borras un usuario tambien se borran sus publicaciones y sus comentarios...
+</p>
+
+<p class="px-5">
+    Estas tablas son creadas al momento de correr el contenedor por SQLAlchemy, sus columnas y relaciones tambien son creadas mediante codigo.    
+</p>
+
+<hr>
+<center>
+    <img src="{{url_for('static', filename='relaciones.png')}}" alt="relaciones">
+</center>
+{% endblock %}

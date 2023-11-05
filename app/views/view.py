@@ -89,16 +89,15 @@ class UsuarioAPI(MethodView):
             db.session.add(nuevo_usuario)
             db.session.commit()
             # si todo salio bien los carga y devuelve lo que se cargo
-            return jsonify(AGREGADO=userSchema().dump(user_json)) 
+            return jsonify(AGREGADO=userSchema().dump(user_json)), 201 
         
         # Puede haber 2 tipos de error, con la serializacion o con la base de datos
         except (ValidationError, IntegrityError) as err:
             # por si es con la serializacion
             if isinstance (err, ValidationError): 
                 return jsonify(ERROR=err.messages), 400
-            # por si es con la base de datos
+            # por si es con la integridad de los datos
             elif isinstance (err, IntegrityError):
-                # hace un rollback, por las dudas
                 db.session.rollback()
                 return jsonify(ERROR=str(err)), 409
     
@@ -225,7 +224,7 @@ class TemaAPI(MethodView):
         if tema_id is None:
             temas = Tema.query.all()
             resultado = temaSchema().dump(temas, many=True)
-            return jsonify(resultado)
+            return jsonify(resultado), 200
 
         # busca tema_id en la tabla Tema
         tema = Tema.query.get(tema_id)
@@ -236,27 +235,39 @@ class TemaAPI(MethodView):
 
         # si se proporciono tema_id y se encontro el tema
         resultado = temaSchema().dump(tema)
-        return jsonify(resultado)
+        return jsonify(resultado), 200
     
     # Crea Temas
     def post(self):
-        tema_json = temaSchema().load(request.json) 
-        tema = tema_json.get('nombre')
+        try: 
+            tema_json = temaSchema().load(request.json) 
+            tema = tema_json.get('nombre')
+        except ValidationError as err:
+            return jsonify(ERROR=err.messages), 400
+        
+        try: 
+            nuevo_tema = Tema(
+                nombre=tema,
+            )
 
-        nuevo_tema = Tema(
-            nombre=tema,
-        )
+            db.session.add(nuevo_tema)
+            db.session.commit()
+        except IntegrityError as err:
+            return jsonify(ERROR=str(err)), 409
+        
 
-        db.session.add(nuevo_tema)
-        db.session.commit()
-
-        return jsonify(AGREGADO=temaSchema().dump(tema_json))
+        return jsonify(AGREGADO=temaSchema().dump(tema_json)), 201
         
     # Borra Temas
     def delete(self, tema_id):
-        tema = Tema.query.get(tema_id)
-        db.session.delete(tema)
-        db.session.commit()
+        # Busca el tema con el id proporcionado
+        try:
+            tema = Tema.query.get(tema_id)
+            db.session.delete(tema)
+            db.session.commit()
+        except:
+            return jsonify(ERROR=f"theme whit id {tema_id} not found"), 404
+
         return jsonify(TEMA_ELIMINADO=temaSchema().dump(tema))
 
 app.add_url_rule('/temas', view_func=TemaAPI.as_view('temas'))
@@ -269,38 +280,64 @@ class ComentarioAPI(MethodView):
         if comentario_id is None:
             comentarios = Comentario.query.all()
             resultado = comentarioSchema().dump(comentarios, many=True)
-        else:
-            comentario = Comentario.query.get(comentario_id)
-            resultado = comentarioSchema().dump(comentario)
-        return jsonify(resultado)
+            return jsonify(resultado), 200
+        
+        comentario = Comentario.query.get(comentario_id)
+        if comentario is None:
+            return jsonify(COMENTARY_NOT_FOUND=f"comentary with id {comentario_id} not found"), 404
+        
+        resultado = comentarioSchema().dump(comentario)
+        return jsonify(resultado), 200
 
     def post(self):
-        comentario_json = comentarioBasicSchema().load(request.json)
-        descripcion = comentario_json.get("descripcion")
-        publicacion_id = comentario_json.get("publicacion_id")
-        usuario_id = comentario_json.get("usuario_id")
+        try:
+            comentario_json = comentarioBasicSchema().load(request.json)
+            descripcion = comentario_json.get("descripcion")
+            publicacion_id = comentario_json.get("publicacion_id")
+            usuario_id = comentario_json.get("usuario_id")
+        except ValidationError as err:
+            return jsonify(ERROR=err.messages), 400
 
-        nuevo_comentario = Comentario(
-            descripcion=descripcion,
-            publicacion_id=publicacion_id,
-            usuario_id=usuario_id,
-        )
+        try:
+            nuevo_comentario = Comentario(
+                descripcion=descripcion,
+                publicacion_id=publicacion_id,
+                usuario_id=usuario_id,
+            )
 
-        db.session.add(nuevo_comentario)
-        db.session.commit()
-        return jsonify(AGREGADO=comentarioSchema().dump(comentario_json))
+            db.session.add(nuevo_comentario)
+            db.session.commit()
+        except IntegrityError as err:
+            return jsonify(ERROR=str(err)),409
+
+        return jsonify(AGREGADO=comentarioSchema().dump(comentario_json)), 201
     
     def delete(self, comentario_id):
-        comentario = Comentario.query.get(comentario_id)
-        db.session.delete(comentario)
-        db.session.commit()
+        try:
+            comentario = Comentario.query.get(comentario_id)
+            db.session.delete(comentario)
+            db.session.commit()
+        except:
+            return jsonify(ERROR=f"comentary with id {comentario_id} not found"), 404
+        
         return jsonify(ELIMINADO=comentarioBasicSchema().dump(comentario))
 
 app.add_url_rule('/comentarios', view_func=ComentarioAPI.as_view('comentarios'))
 app.add_url_rule('/comentarios/<comentario_id>', view_func=ComentarioAPI.as_view('comentario_id'))
 
-# ----------- Endpoint Raiz (? -----------
+
+# ----------- Endpoints para templates (parte de devops) -----------
+
 
 @app.route('/')
 def index():
-    return '<h1>Index</h1>'
+    return render_template('index.html')
+
+@app.route('/endpoints')
+def endpoints():
+    return render_template('endpoints.html')
+
+
+@app.route('/models')
+def models():
+    return render_template('models.html')

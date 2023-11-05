@@ -1,8 +1,135 @@
 {% extends 'layout.html' %}
 {% block title %}
-    Testing
+Home
 {% endblock %}
 
 {% block body %}
-<h1>Some testing</h1>
+
+<h1 class="px-5 pt-2">
+    API con Flask y Docker
+</h1>
+
+<p class="px-5">
+    Este proyecto es una API de Flask que usa Docker y MySQL para crear y gestionar usuarios, publicaciones, temas y
+    comentarios.
+    La API permite hacer operaciones CRUD (crear, leer, actualizar y borrar) sobre estos recursos, usando diferentes
+    endpoints y métodos HTTP.
+    La API también usa SQLAlchemy, Marshmallow y pytest para facilitar el trabajo con la base de datos, la serialización
+    y deserialización de
+    los datos, y los tests de la aplicación.
+</p>
+
+<br><hr><br>
+
+<h1 class="px-5">
+    Requisitos
+</h1>
+
+<p class="px-5">
+    Para ejecutar este proyecto, necesitas tener instalado Docker y docker-compose en tu máquina.
+    También necesitas tener un archivo .env con las variables de entorno necesarias para la configuración de la
+    aplicación y la base de datos.
+    Un ejemplo de este archivo es el siguiente:
+</p>
+
+<div class="px-5">
+    <code>
+        SQLALCHEMY_DATABASE_URI = mysql+pymysql://db_user:root@mysql_db:3306/db_valentino<br>
+    </code>
+    <code>
+        MYSQL_PASSWORD = root<br>
+    </code>
+    <code>
+        MYSQL_USER = db_user<br>
+    </code>
+    <code>
+        MYSQL_DATABASE = db_valentino<br>
+    </code>
+    <code>
+        FLASK_APP=app<br>
+    </code>
+</div>
+
+<br>
+
+<h3 class="px-5">
+    Los datos que se reciben en las peticiones son de tipo JSON, y tienen el siguiente formato:
+</h3>
+
+<br>
+
+<div class="px-5">
+    <pre class="text-warning bg-dark card p-3" style="width: 600px;">
+        <center><u>Los GET a /user se ven asi</u></center>
+        {
+            "email": "str",
+            "fecha_creacion": DateTime,
+            "id": Int,
+            "nombre": "str",
+            "password": "str"
+        }
+
+        <center><u>Los GET a /publicaciones se ven asi</u></center>
+        {
+            "descripcion": "str",
+            "fecha_hora": "DateTime",
+            "id": Int,
+            "tema": {
+                "id": Int,
+                "nombre": "str"
+            },
+            "tema_id": Int,
+            "usuario": {
+                "email": "str",
+                "fecha_creacion": "DateTime",
+                "id": Int,
+                "nombre": "str",
+                "password": "str"
+            },
+            "usuario_id": Int
+        }
+
+        <center><u>Los GET a /comentarios se ven asi</u></center>
+        {
+            "descripcion": "str",
+            "fecha_hora": "DateTime",
+            "id": Int,
+            "publicacion": {
+                "descripcion": "str",
+                "fecha_hora": "DateTime",
+                "id": Int,
+                "tema": {
+                    "id": Int,
+                    "nombre": "str"
+                },
+                "tema_id": Int,
+                "usuario": {
+                    "email": "str",
+                    "fecha_creacion": "DateTime",
+                    "id": Int,
+                    "nombre": "str",
+                    "password": "str"
+                },
+                "usuario_id": Int
+            },
+            "publicacion_id": Int,
+            "usuario": {
+                "email": "str",
+                "fecha_creacion": "DateTime",
+                "id": Int,
+                "nombre": "str",
+                "password": "str"
+            },
+            "usuario_id": Int
+        }
+
+        <center><u>Los GET a /temas se ven asi</u></center>
+        {
+            "id": Int,
+            "nombre": "str"
+        }
+
+    </pre>
+</div>
+
 {% endblock %}
