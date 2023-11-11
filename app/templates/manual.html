@@ -1,0 +1,68 @@
+{% extends 'layout.html' %}
+{% block title %}
+Endpoints
+{% endblock %}
+{% block body %}
+<h1 class="px-5 pt-2">
+    Instrucciones para el uso de la API en Postman 
+</h1>
+<h3 class="px-5">
+    Para tener todas las requests con todos sus metodos tenemos que hacer lo siguente
+</h3>
+
+<br><hr><br>
+
+<h2 class="px-5">Paso 1</h2>
+<h4 class="px-5">
+    Dentro de Postman tenemos que importar las colecciones que se encuentran en formato JSON dentro de el directorio raiz de este proyecto.<br>
+    Para esto, esta el boton <code>Import</code> arriba a la izquierda.<br>
+</h4>
+<center>
+    <img class="shadow-lg rounded" src="{{url_for('static', filename='postman1.png')}}" alt="">
+</center>
+
+<br><hr><br>
+
+<h2 class="px-5">Paso 2</h2>
+<h4 class="px-5">
+    Esto nos va a abrir una ventana que nos va a solicitar que marquemos la carpeta o archivos con las colecciones JSON. <br>
+    Aca podes elegir lo que quieras yo pongo la opcion <code>Files</code> pero da igual. <br>
+</h4>
+
+<center>
+    <img class="shadow-lg rounded" src="{{url_for('static', filename='postman2.png')}}" alt="">
+</center>
+
+<br><hr><br>
+
+<h2 class="px-5">Paso 3</h2>
+<h4 class="px-5">
+    Tenemos que seleccionar los 4 archivos si elegimos <code>Files</code> o la carpeta entera si elegimos <code>Folders</code> <br>
+</h4>
+
+<center>
+    <img class="shadow-lg rounded" src="{{url_for('static', filename='postman3.png')}}" alt="">
+</center>
+
+<br><hr><br>
+
+<h2 class="px-5">Paso 4</h2>
+<h4 class="px-5">
+    El paso final es importarlo
+</h4>
+
+<center>
+    <img class="shadow-lg rounded" src="{{url_for('static', filename='postman4.png')}}" alt="">
+</center>
+
+<br><hr><br>
+
+<h2 class="px-5">Paso 5</h2>
+<h4 class="px-5">
+    Ya tendrian que aparecer todas las peticiones separadas por carpetas con cada uno de los metodos disponibles para la API
+</h4>
+
+<center>
+    <img class="shadow-lg rounded" src="{{url_for('static', filename='postman5.png')}}" alt="">
+</center>
+{% endblock %}
