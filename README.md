@@ -10,7 +10,7 @@ Para ejecutar este proyecto, tenes que tener instalado Docker y docker-compose e
 
 También necesitas tener un archivo .env con las variables de entorno necesarias para la configuración de la aplicación y la base de datos. 
 
-    Un ejemplo de este archivo es el siguiente:
+Un ejemplo de este archivo es el siguiente:
 
 `SQLALCHEMY_DATABASE_URI=mysql+pymysql://user:root@mysql:3306/db`
 
@@ -53,7 +53,7 @@ Para detener y eliminar los contenedores:
 
 <center> <h1>  Endpoints </h1>  </center>
 
-    La API tiene los siguientes endpoints:
+La API tiene los siguientes endpoints:
 
 `/usuarios` Permite crear y obtener usuarios.
 
