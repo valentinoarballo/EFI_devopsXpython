@@ -23,7 +23,7 @@ También necesitas tener un archivo .env con las variables de entorno necesarias
 
 <center> <h1>  Instrucciones </h1>  </center>
 
-    Para ejecutar este proyecto, sigue estos pasos:
+Para ejecutar este proyecto, sigue estos pasos:
 
 <ol>
     <li>
@@ -47,8 +47,9 @@ O una petición <strong>POST</strong> a http://0.0.0.0:5055/temas para crear un 
     </li>
 </ol>
 
-    Para detener y eliminar los contenedores:
-`docker-compose down`
+Para detener y eliminar los contenedores:
+    
+    docker-compose down
 
 <center> <h1>  Endpoints </h1>  </center>
 
